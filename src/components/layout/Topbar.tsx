@@ -9,7 +9,7 @@ type TopbarProps = {
   onToggleTheme: () => void
 }
 
-export function Topbar({ title, userName, userEmail, onLogout, theme, onToggleTheme }: TopbarProps) {
+export function Topbar({ title, userName, userEmail: _userEmail, onLogout, theme, onToggleTheme }: TopbarProps) {
   const ThemeIcon = theme === 'light' ? Moon : SunMedium
 
   const initials = userName

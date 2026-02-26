@@ -135,12 +135,14 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
     loadAll()
   }, [])
 
-  const authHeaders = authToken ? { Authorization: `Bearer ${authToken}` } : {}
+  const getAuthHeaders = (): HeadersInit => {
+    return authToken ? { Authorization: `Bearer ${authToken}` } : {}
+  }
 
   const addEmployee: AppDataContextValue['addEmployee'] = async (input) => {
     const res = await fetch(`${API_BASE_URL}/employees`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify(input),
     })
     const created: Employee & { _id?: string } = await res.json()
@@ -153,7 +155,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const approveEmployee: AppDataContextValue['approveEmployee'] = async (id) => {
     const res = await fetch(`${API_BASE_URL}/employees/${id}/approve`, {
       method: 'PATCH',
-      headers: authHeaders,
+      headers: getAuthHeaders(),
     })
     const updated: Employee & { _id?: string } = await res.json()
     const updatedId = (updated as any)._id ?? updated.id
@@ -166,7 +168,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const updateEmployee: AppDataContextValue['updateEmployee'] = async (id, changes) => {
     const res = await fetch(`${API_BASE_URL}/employees/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify(changes),
     })
     const updated: Employee & { _id?: string } = await res.json()
@@ -182,7 +184,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const deleteEmployee: AppDataContextValue['deleteEmployee'] = async (id) => {
     await fetch(`${API_BASE_URL}/employees/${id}`, {
       method: 'DELETE',
-      headers: authHeaders,
+      headers: getAuthHeaders(),
     })
     setState((prev) => ({
       ...prev,
@@ -193,7 +195,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const approveAllPayroll: AppDataContextValue['approveAllPayroll'] = async () => {
     const res = await fetch(`${API_BASE_URL}/employees/approve-all`, {
       method: 'POST',
-      headers: authHeaders,
+      headers: getAuthHeaders(),
     })
     const employees: (Employee & { _id?: string })[] = await res.json()
     setState((prev) => ({
@@ -205,7 +207,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const addTask: AppDataContextValue['addTask'] = async (input) => {
     const res = await fetch(`${API_BASE_URL}/tasks`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify(input),
     })
     const created: Task & { _id?: string } = await res.json()
@@ -218,7 +220,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const submitTask: AppDataContextValue['submitTask'] = async (id, submissionLink) => {
     const res = await fetch(`${API_BASE_URL}/tasks/${id}/submit`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify({ submissionLink }),
     })
     const updated: Task & { _id?: string } = await res.json()
@@ -234,7 +236,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const approveTask: AppDataContextValue['approveTask'] = async (id) => {
     const res = await fetch(`${API_BASE_URL}/tasks/${id}/approve`, {
       method: 'PATCH',
-      headers: authHeaders,
+      headers: getAuthHeaders(),
     })
     const updated: Task & { _id?: string } = await res.json()
     const updatedId = (updated as any)._id ?? updated.id
@@ -249,7 +251,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const rejectTask: AppDataContextValue['rejectTask'] = async (id) => {
     const res = await fetch(`${API_BASE_URL}/tasks/${id}/reject`, {
       method: 'PATCH',
-      headers: authHeaders,
+      headers: getAuthHeaders(),
     })
     const updated: Task & { _id?: string } = await res.json()
     const updatedId = (updated as any)._id ?? updated.id
@@ -264,7 +266,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const addLead: AppDataContextValue['addLead'] = async (input) => {
     const res = await fetch(`${API_BASE_URL}/leads`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify(input),
     })
     const created: Lead & { _id?: string } = await res.json()
@@ -277,7 +279,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const convertLeadToClient: AppDataContextValue['convertLeadToClient'] = async (id) => {
     const res = await fetch(`${API_BASE_URL}/leads/${id}/convert`, {
       method: 'PATCH',
-      headers: authHeaders,
+      headers: getAuthHeaders(),
     })
     const updated: Lead & { _id?: string } = await res.json()
     const updatedId = (updated as any)._id ?? updated.id
@@ -292,7 +294,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const deleteLead: AppDataContextValue['deleteLead'] = async (id) => {
     await fetch(`${API_BASE_URL}/leads/${id}`, {
       method: 'DELETE',
-      headers: authHeaders,
+      headers: getAuthHeaders(),
     })
     setState((prev) => ({
       ...prev,
@@ -303,7 +305,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const addProject: AppDataContextValue['addProject'] = async (input) => {
     const res = await fetch(`${API_BASE_URL}/projects`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify(input),
     })
     const created: Project & { _id?: string } = await res.json()
@@ -316,7 +318,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const updateProject: AppDataContextValue['updateProject'] = async (id, changes) => {
     const res = await fetch(`${API_BASE_URL}/projects/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify(changes),
     })
     const updated: Project & { _id?: string } = await res.json()
@@ -332,7 +334,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const deleteProject: AppDataContextValue['deleteProject'] = async (id) => {
     await fetch(`${API_BASE_URL}/projects/${id}`, {
       method: 'DELETE',
-      headers: authHeaders,
+      headers: getAuthHeaders(),
     })
     setState((prev) => ({
       ...prev,

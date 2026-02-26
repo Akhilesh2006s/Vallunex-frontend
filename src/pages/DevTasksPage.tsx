@@ -8,7 +8,7 @@ type DevTasksPageProps = {
   currentUserEmail?: string
 }
 
-export function DevTasksPage({ onOpenModal, currentUserName, currentUserEmail }: DevTasksPageProps) {
+export function DevTasksPage({ onOpenModal: _onOpenModal, currentUserName, currentUserEmail }: DevTasksPageProps) {
   const { employees, tasks, submitTask } = useAppData()
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('')
 

@@ -7,7 +7,7 @@ type ProjectsPageProps = {
 }
 
 export function ProjectsPage({ onOpenModal }: ProjectsPageProps) {
-  const { employees, projects, addProject, updateProject, deleteProject } = useAppData()
+  const { employees, projects, addProject, updateProject: _updateProject, deleteProject } = useAppData()
 
   const [formState, setFormState] = useState<{
     name: string

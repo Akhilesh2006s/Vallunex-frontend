@@ -67,6 +67,7 @@ export function Modal({ type, onClose }: ModalProps) {
         deadline: taskDeadline || new Date().toISOString().slice(0, 10),
         // Only allow assigning to employees that Admin has added.
         assignedTo: taskAssignee,
+        status: 'Open',
       })
       onClose()
       return
@@ -98,11 +99,13 @@ export function Modal({ type, onClose }: ModalProps) {
         onClose()
         return
       }
+      // Find employee by name or use first available employee
+      const selectedEmployee = employees.find((emp) => emp.name === projectOwner) || employees[0]
       addProject({
         name: projectName,
-        owner: projectOwner || 'Unassigned',
-        status: 'Active',
-        dueDate: projectDueDate || new Date().toISOString().slice(0, 10),
+        clientName: projectOwner || 'Unassigned',
+        status: 'Planned',
+        ownerEmployeeId: selectedEmployee?.id || '',
       })
       onClose()
       return

@@ -6,7 +6,7 @@ type EmployeesPageProps = {
 }
 
 export function EmployeesPage({ onOpenModal }: EmployeesPageProps) {
-  const { employees, approveEmployee, updateEmployee, deleteEmployee } = useAppData()
+  const { employees, approveEmployee: _approveEmployee, updateEmployee: _updateEmployee, deleteEmployee } = useAppData()
 
   const totalEmployees = employees.length
   const pendingCount = employees.filter((emp) => emp.status === 'Pending').length

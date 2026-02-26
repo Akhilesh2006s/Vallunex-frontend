@@ -8,7 +8,7 @@ type DevelopmentDashboardProps = {
   currentUserEmail?: string
 }
 
-export function DevelopmentDashboard({ onOpenModal, currentUserName, currentUserEmail }: DevelopmentDashboardProps) {
+export function DevelopmentDashboard({ onOpenModal: _onOpenModal, currentUserName, currentUserEmail }: DevelopmentDashboardProps) {
   const { employees, tasks, projects, submitTask } = useAppData()
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('')
 
