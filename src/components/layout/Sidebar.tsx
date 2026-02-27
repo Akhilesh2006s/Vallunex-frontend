@@ -32,7 +32,7 @@ export function Sidebar({ currentRole, activeSection, onChangeSection, onOpenMod
         </div>
         <div className="sidebar-brand">
           <span className="sidebar-title">Vallunex</span>
-          <span className="sidebar-subtitle">Command Cntre</span>
+          <span className="sidebar-subtitle">Command Center</span>
         </div>
       </div>
 

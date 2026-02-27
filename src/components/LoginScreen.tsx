@@ -56,7 +56,7 @@ export function LoginScreen({ onLogin, theme, onToggleTheme }: LoginScreenProps)
             <span className="logo-mark">V</span>
             <div className="logo-text">
               <span className="logo-title">Vallunex</span>
-              <span className="logo-subtitle">Command Cntre</span>
+              <span className="logo-subtitle">Command Center</span>
             </div>
           </div>
           <button type="button" className="theme-toggle" onClick={onToggleTheme} aria-label="Toggle theme">

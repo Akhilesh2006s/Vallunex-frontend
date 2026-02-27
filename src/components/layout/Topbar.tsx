@@ -30,7 +30,7 @@ export function Topbar({ title, userName, userEmail: _userEmail, onLogout, theme
           <span className="search-icon">
             <Search className="topbar-icon-svg" />
           </span>
-          <input className="search-input" placeholder="Search in Vallunex Command Cntre" />
+          <input className="search-input" placeholder="Search in Vallunex Command Center" />
         </div>
       </div>
 
