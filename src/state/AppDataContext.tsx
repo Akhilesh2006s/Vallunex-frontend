@@ -107,7 +107,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
           fetch(`${API_BASE_URL}/projects`),
         ])
 
-        const [employeesRaw, tasks, leads, projects] = await Promise.all([
+        const [employeesRaw, tasks, leadsRaw, projects] = await Promise.all([
           employeesRes.json(),
           tasksRes.json(),
           leadsRes.json(),
@@ -115,6 +115,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
         ])
 
         const employees: (Employee & { _id?: string })[] = employeesRaw
+        const leads: (Lead & { _id?: string })[] = leadsRaw
 
         setState({
           employees: employees.map((emp) => ({
@@ -122,7 +123,10 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
             id: (emp as any)._id ?? emp.id,
           })),
           tasks,
-          leads,
+          leads: leads.map((lead) => ({
+            ...lead,
+            id: (lead as any)._id ?? lead.id,
+          })),
           projects,
         })
       } catch (error) {
