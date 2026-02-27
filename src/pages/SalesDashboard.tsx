@@ -9,7 +9,7 @@ export function SalesDashboard({ onOpenModal }: SalesDashboardProps) {
   const { leads, convertLeadToClient } = useAppData()
 
   const totalRevenue = leads
-    .filter((lead) => lead.status === 'Client')
+    .filter((lead) => lead.status === 'Client' && lead.valuePeriod === 'Monthly')
     .reduce((sum, lead) => sum + lead.value, 0)
   const dealsClosed = leads.filter((lead) => lead.status === 'Client').length
 
@@ -60,7 +60,7 @@ export function SalesDashboard({ onOpenModal }: SalesDashboardProps) {
               <tr>
                 <th>Client Name</th>
                 <th>Status</th>
-                <th>Value</th>
+                <th>Expected value</th>
                 <th>Assigned Rep</th>
                 <th className="table-actions-col">Action</th>
               </tr>
@@ -87,7 +87,8 @@ export function SalesDashboard({ onOpenModal }: SalesDashboardProps) {
                       style: 'currency',
                       currency: 'INR',
                       maximumFractionDigits: 0,
-                    })}
+                    })}{' '}
+                    <span className="card-subtitle">{lead.valuePeriod === 'Monthly' ? 'per month' : 'per year'}</span>
                   </td>
                   <td>{lead.salesRep}</td>
                   <td className="table-actions-col">

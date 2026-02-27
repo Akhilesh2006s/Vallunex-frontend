@@ -21,9 +21,24 @@ function App() {
   const [theme, setTheme] = useState<ThemeMode>('light')
 
   useEffect(() => {
+    // Restore theme preference
     const storedTheme = window.localStorage.getItem('vallunex-theme') as ThemeMode | null
     if (storedTheme === 'light' || storedTheme === 'dark') {
       setTheme(storedTheme)
+    }
+
+    // Restore previously logged-in user, if any
+    const storedUser = window.localStorage.getItem('vallunex-user')
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser) as User
+        if (parsed && parsed.token && parsed.email && parsed.role) {
+          setUser(parsed)
+        }
+      } catch {
+        // Ignore invalid stored user
+        window.localStorage.removeItem('vallunex-user')
+      }
     }
   }, [])
 
@@ -34,10 +49,12 @@ function App() {
 
   const handleLogin = (loggedInUser: User) => {
     setUser(loggedInUser)
+    window.localStorage.setItem('vallunex-user', JSON.stringify(loggedInUser))
   }
 
   const handleLogout = () => {
     setUser(null)
+    window.localStorage.removeItem('vallunex-user')
   }
 
   const toggleTheme = () => {

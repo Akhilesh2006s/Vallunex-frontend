@@ -6,21 +6,38 @@ type EmployeesPageProps = {
 }
 
 export function EmployeesPage({ onOpenModal }: EmployeesPageProps) {
-  const { employees, approveEmployee: _approveEmployee, updateEmployee: _updateEmployee, deleteEmployee } = useAppData()
+  const { employees, products, projects, updateEmployee, updateProject, deleteEmployee } = useAppData()
 
   const totalEmployees = employees.length
   const pendingCount = employees.filter((emp) => emp.status === 'Pending').length
+
+  // Filters
+  const [filterRole, setFilterRole] = useState<string>('All')
+  const [filterPayroll, setFilterPayroll] = useState<'All' | 'Paid' | 'Pending'>('All')
+  const [filterSearch, setFilterSearch] = useState('')
+
+  const filteredEmployees = employees.filter((emp) => {
+    if (filterRole !== 'All' && emp.role !== filterRole) return false
+    if (filterPayroll !== 'All' && emp.status !== filterPayroll) return false
+    if (
+      filterSearch &&
+      !`${emp.name} ${emp.email || ''}`.toLowerCase().includes(filterSearch.toLowerCase())
+    ) {
+      return false
+    }
+    return true
+  })
 
   return (
     <div className="page-grid">
       <section className="card span-4">
         <div className="card-header with-actions">
           <div>
-            <h2>Employees</h2>
+            <h2>Team members</h2>
             <p className="card-subtitle">Manage your organisation&apos;s people in one clean view.</p>
           </div>
           <button type="button" className="primary-button sm" onClick={() => onOpenModal('addEmployee')}>
-            + Add employee
+            + Add
           </button>
         </div>
         <div className="overview-grid three">
@@ -46,6 +63,36 @@ export function EmployeesPage({ onOpenModal }: EmployeesPageProps) {
         <div className="card-header">
           <h2>Employee directory</h2>
         </div>
+        <div className="page-actions-buttons" style={{ marginBottom: 8, flexWrap: 'wrap' }}>
+          <input
+            className="form-select"
+            style={{ maxWidth: 220 }}
+            placeholder="Search by name or email…"
+            value={filterSearch}
+            onChange={(e) => setFilterSearch(e.target.value)}
+          />
+          <select
+            className="filter-select"
+            value={filterRole}
+            onChange={(e) => setFilterRole(e.target.value)}
+          >
+            <option value="All">All roles</option>
+            {Array.from(new Set(employees.map((e) => e.role))).map((role) => (
+              <option key={role} value={role}>
+                {role}
+              </option>
+            ))}
+          </select>
+          <select
+            className="filter-select"
+            value={filterPayroll}
+            onChange={(e) => setFilterPayroll(e.target.value as 'All' | 'Paid' | 'Pending')}
+          >
+            <option value="All">All payroll statuses</option>
+            <option value="Paid">Paid</option>
+            <option value="Pending">Pending</option>
+          </select>
+        </div>
         <div className="table-wrapper">
           <table className="data-table">
             <thead>
@@ -53,15 +100,71 @@ export function EmployeesPage({ onOpenModal }: EmployeesPageProps) {
                 <th>Name</th>
                 <th>Email</th>
                 <th>Role</th>
+                <th>Products</th>
+                <th>Projects</th>
                 <th className="table-actions-col">Action</th>
               </tr>
             </thead>
             <tbody>
-              {employees.map((emp) => (
+              {filteredEmployees.map((emp) => (
                 <tr key={emp.id}>
                   <td>{emp.name}</td>
                   <td>{emp.email ?? '—'}</td>
                   <td>{emp.role}</td>
+                  <td>
+                    <select
+                      className="filter-select"
+                      value=""
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (!value) return
+                        const currentIds = emp.productIds ?? []
+                        const nextIds = currentIds.includes(value) ? currentIds : [...currentIds, value]
+                        void updateEmployee(emp.id, { productIds: nextIds })
+                      }}
+                    >
+                      <option value="">Assign product…</option>
+                      {products.map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name}
+                        </option>
+                      ))}
+                    </select>
+                    {emp.productIds && emp.productIds.length > 0 && (
+                      <div className="card-subtitle">
+                        {(emp.productIds || [])
+                          .map((id) => products.find((p) => p.id === id)?.name)
+                          .filter(Boolean)
+                          .join(', ')}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    <select
+                      className="filter-select"
+                      value=""
+                      onChange={(e) => {
+                        const projectId = e.target.value
+                        if (!projectId) return
+                        void updateProject(projectId, { ownerEmployeeId: emp.id })
+                      }}
+                    >
+                      <option value="">Assign project…</option>
+                      {projects.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                    {projects.some((project) => project.ownerEmployeeId === emp.id) && (
+                      <div className="card-subtitle">
+                        {projects
+                          .filter((project) => project.ownerEmployeeId === emp.id)
+                          .map((p) => p.name)
+                          .join(', ')}
+                      </div>
+                    )}
+                  </td>
                   <td className="table-actions-col">
                     <button
                       type="button"

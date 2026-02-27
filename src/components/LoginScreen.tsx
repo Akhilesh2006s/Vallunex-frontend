@@ -7,7 +7,8 @@ type LoginScreenProps = {
   onToggleTheme: () => void
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://vallunex-company-app-backend-production.up.railway.app/api'
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? 'https://vallunex-company-app-backend-production.up.railway.app/api'
 
 type LoginState = 'idle' | 'loading' | 'error'
 
@@ -51,70 +52,91 @@ export function LoginScreen({ onLogin, theme, onToggleTheme }: LoginScreenProps)
   return (
     <div className="login-container">
       <div className="login-card">
-        <div className="login-header">
-          <div className="login-logo">
-            <span className="logo-mark">V</span>
-            <div className="logo-text">
-              <span className="logo-title">Vallunex</span>
-              <span className="logo-subtitle">Command Center</span>
+        <div className="login-card-inner">
+          <div className="login-hero">
+            <div className="login-logo">
+              <span className="logo-mark">V</span>
+              <div className="logo-text">
+                <span className="logo-title">Vallunex</span>
+                <span className="logo-subtitle">Command Center</span>
+              </div>
+            </div>
+
+            <div className="login-hero-copy">
+              <h1 className="login-title">Welcome back</h1>
+              <p className="login-subtitle">
+                Sign in to manage payroll, projects and tasks in one secure command center.
+              </p>
+              <ul className="login-highlights">
+                <li>Real-time payroll and project health</li>
+                <li>Centralised employee management</li>
+                <li>Secure access for your whole team</li>
+              </ul>
             </div>
           </div>
-          <button type="button" className="theme-toggle" onClick={onToggleTheme} aria-label="Toggle theme">
-            {theme === 'light' ? '🌙' : '☀️'}
-          </button>
-        </div>
 
-        <div className="login-body">
-          <h1>Welcome back</h1>
-          <p className="login-subtitle">Sign in to manage payroll, projects and tasks in one place.</p>
-
-          <form className="login-form" onSubmit={handleSubmit} autoComplete="off">
-            <label className="form-label" htmlFor="email">
-              Work email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              className="form-select"
-              autoComplete="off"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@vallunex.com"
-              required
-            />
-
-            <label className="form-label" htmlFor="password">
-              Password
-            </label>
-            <div className="password-field">
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                className="form-select"
-                autoComplete="off"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+          <div className="login-panel">
+            <div className="login-panel-header">
+              <p className="login-panel-title">Sign in to your workspace</p>
               <button
                 type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword((prev) => !prev)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="theme-toggle"
+                onClick={onToggleTheme}
+                aria-label="Toggle theme"
               >
-                {showPassword ? 'Hide' : 'Show'}
+                {theme === 'light' ? '🌙' : '☀️'}
               </button>
             </div>
 
-            {status === 'error' && <p className="login-error-text">{errorMessage}</p>}
+            <form className="login-form" onSubmit={handleSubmit} autoComplete="off">
+              <label className="form-label" htmlFor="email">
+                Work email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                className="form-select"
+                autoComplete="off"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@vallunex.com"
+                required
+              />
 
-            <button type="submit" className="primary-button login-button" disabled={status === 'loading'}>
-              {status === 'loading' ? 'Signing in…' : 'Continue'}
-            </button>
-          </form>
+              <label className="form-label" htmlFor="password">
+                Password
+              </label>
+              <div className="password-field">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  className="form-select"
+                  autoComplete="off"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
 
+              {status === 'error' && <p className="login-error-text">{errorMessage}</p>}
+
+              <button type="submit" className="primary-button login-button" disabled={status === 'loading'}>
+                {status === 'loading' ? 'Signing in…' : 'Continue'}
+              </button>
+
+              <p className="login-footer-text">Use the credentials shared with you by the Vallunex team.</p>
+            </form>
+          </div>
         </div>
       </div>
     </div>

@@ -11,7 +11,18 @@ import {
 import type { UserRole } from '../../App'
 import type { ModalType } from '../modals/Modal'
 
-type DashboardSection = 'overview' | 'employees' | 'payroll' | 'clients' | 'projects' | 'devTasks' | 'devPayroll' | 'devProjects'
+type DashboardSection =
+  | 'overview'
+  | 'employees'
+  | 'payroll'
+  | 'leads'
+  | 'products'
+  | 'adminTasks'
+  | 'clients'
+  | 'projects'
+  | 'devTasks'
+  | 'devPayroll'
+  | 'devProjects'
 
 type SidebarProps = {
   currentRole: UserRole
@@ -60,7 +71,7 @@ export function Sidebar({ currentRole, activeSection, onChangeSection, onOpenMod
               <span className="sidebar-icon">
                 <Users className="sidebar-icon-svg" />
               </span>
-              <span>Employees</span>
+              <span>Team members</span>
             </button>
             <button
               className={`sidebar-link ${activeSection === 'payroll' ? 'is-active' : ''}`}
@@ -71,6 +82,36 @@ export function Sidebar({ currentRole, activeSection, onChangeSection, onOpenMod
                 <CreditCard className="sidebar-icon-svg" />
               </span>
               <span>Payroll</span>
+            </button>
+            <button
+              className={`sidebar-link ${activeSection === 'adminTasks' ? 'is-active' : ''}`}
+              type="button"
+              onClick={() => onChangeSection('adminTasks')}
+            >
+              <span className="sidebar-icon">
+                <ClipboardList className="sidebar-icon-svg" />
+              </span>
+              <span>Tasks</span>
+            </button>
+            <button
+              className={`sidebar-link ${activeSection === 'leads' ? 'is-active' : ''}`}
+              type="button"
+              onClick={() => onChangeSection('leads')}
+            >
+              <span className="sidebar-icon">
+                <BriefcaseBusiness className="sidebar-icon-svg" />
+              </span>
+              <span>Leads</span>
+            </button>
+            <button
+              className={`sidebar-link ${activeSection === 'products' ? 'is-active' : ''}`}
+              type="button"
+              onClick={() => onChangeSection('products')}
+            >
+              <span className="sidebar-icon">
+                <FolderKanban className="sidebar-icon-svg" />
+              </span>
+              <span>Products</span>
             </button>
             <button
               className={`sidebar-link ${activeSection === 'clients' ? 'is-active' : ''}`}

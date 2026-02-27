@@ -30,7 +30,7 @@ export function Modal({ type, onClose }: ModalProps) {
   const [projectDueDate, setProjectDueDate] = useState('')
 
   const TITLE_MAP: Record<ModalType, string> = {
-    addEmployee: 'Add Employee',
+    addEmployee: 'Add member',
     addTask: 'Add Task',
     approvePayroll: 'Approve Payroll',
     addLead: 'Add Sales Lead',
@@ -146,14 +146,14 @@ export function Modal({ type, onClose }: ModalProps) {
               </div>
               <div className="field-group">
                 <label htmlFor="employeeRole">Role</label>
-                <select
+                  <select
                   id="employeeRole"
                   value={employeeRole}
                   onChange={(e) =>
                     setEmployeeRole(e.target.value as 'Employee' | 'Sales' | 'Manager')
                   }
-                >
-                  <option value="Employee">Employee</option>
+                  >
+                  <option value="Employee">Member</option>
                   <option value="Sales">Sales</option>
                   <option value="Manager">Manager</option>
                 </select>
@@ -168,7 +168,7 @@ export function Modal({ type, onClose }: ModalProps) {
                   onChange={(e) => setEmployeePassword(e.target.value)}
                 />
                 <p className="field-helper-text">
-                  Employees (like Akhilesh or Madhav) will use this email and password to log in.
+                  Team members (like Akhilesh or Madhav) will use this email and password to log in.
                 </p>
               </div>
             </form>
@@ -209,13 +209,13 @@ export function Modal({ type, onClose }: ModalProps) {
                 </div>
               </div>
               <div className="field-group">
-                <label htmlFor="taskAssignee">Assign to employee</label>
+                <label htmlFor="taskAssignee">Assign to member</label>
                 <select
                   id="taskAssignee"
                   value={taskAssignee}
                   onChange={(e) => setTaskAssignee(e.target.value)}
                 >
-                  <option value="">Select employee</option>
+                  <option value="">Select member</option>
                   {employees.map((emp) => (
                     <option key={emp.id} value={emp.name}>
                       {emp.name}

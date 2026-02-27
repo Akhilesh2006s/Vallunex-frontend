@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useAppData } from '../state/AppDataContext'
 
 export function ClientsPage() {
-  const { leads, addLead, deleteLead } = useAppData()
+  const { leads, products, addLead, deleteLead, updateLead } = useAppData()
   const clients = leads.filter((lead) => lead.status === 'Client')
 
   const [name, setName] = useState('')
@@ -65,6 +65,7 @@ export function ClientsPage() {
               <tr>
                 <th>Client name</th>
                 <th>Status</th>
+                <th>Products</th>
                 <th>Value</th>
                 <th>Sales rep</th>
                 <th className="table-actions-col">Action</th>
@@ -78,11 +79,63 @@ export function ClientsPage() {
                     <span className="pill pill-success">Client</span>
                   </td>
                   <td>
+                    {client.productIds.length ? (
+                      <select
+                        className="filter-select"
+                        multiple={false}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          if (!value) return
+                          const newProductIds = client.productIds.includes(value)
+                            ? client.productIds
+                            : [...client.productIds, value]
+                          void updateLead(client.id, { productIds: newProductIds })
+                        }}
+                        value=""
+                      >
+                        <option value="">Assign product…</option>
+                        {products.map((product) => (
+                          <option key={product.id} value={product.id}>
+                            {product.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <select
+                        className="filter-select"
+                        onChange={(e) => {
+                          const value = e.target.value
+                          if (!value) return
+                          void updateLead(client.id, { productIds: [value] })
+                        }}
+                        value=""
+                      >
+                        <option value="">Assign product…</option>
+                        {products.map((product) => (
+                          <option key={product.id} value={product.id}>
+                            {product.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {client.productIds.length > 0 && (
+                      <div className="card-subtitle">
+                        {client.productIds
+                          .map((id) => products.find((p) => p.id === id)?.name)
+                          .filter(Boolean)
+                          .join(', ')}
+                      </div>
+                    )}
+                  </td>
+                  <td>
                     {client.value.toLocaleString('en-IN', {
                       style: 'currency',
                       currency: 'INR',
                       maximumFractionDigits: 0,
-                    })}
+                    })}{' '}
+                    <span className="card-subtitle">
+                      {client.valuePeriod === 'Monthly' ? 'per month' : 'per year'}
+                    </span>
                   </td>
                   <td>{client.salesRep}</td>
                   <td className="table-actions-col">

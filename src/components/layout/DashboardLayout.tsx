@@ -6,6 +6,9 @@ import { DevelopmentDashboard } from '../../pages/DevelopmentDashboard'
 import { EmployeesPage } from '../../pages/EmployeesPage'
 import { ClientsPage } from '../../pages/ClientsPage'
 import { ProjectsPage } from '../../pages/ProjectsPage'
+import { LeadsPage } from '../../pages/LeadsPage'
+import { ProductsPage } from '../../pages/ProductsPage'
+import { EmployeeTasksPage } from '../../pages/EmployeeTasksPage'
 import { PayrollPage } from '../../pages/PayrollPage'
 import { DevTasksPage } from '../../pages/DevTasksPage'
 import { DevPayrollPage } from '../../pages/DevPayrollPage'
@@ -26,6 +29,9 @@ type DashboardSection =
   | 'overview'
   | 'employees'
   | 'payroll'
+  | 'leads'
+  | 'products'
+  | 'adminTasks'
   | 'clients'
   | 'projects'
   | 'devTasks'
@@ -101,6 +107,9 @@ export function DashboardLayout({ user, onLogout, theme, onToggleTheme }: Dashbo
     if (activeSection === 'overview') content = <AdminDashboard onOpenModal={openModal} />
     if (activeSection === 'employees') content = <EmployeesPage onOpenModal={openModal} />
     if (activeSection === 'payroll') content = <PayrollPage />
+    if (activeSection === 'leads') content = <LeadsPage />
+    if (activeSection === 'products') content = <ProductsPage />
+    if (activeSection === 'adminTasks') content = <EmployeeTasksPage />
     if (activeSection === 'clients') content = <ClientsPage />
     if (activeSection === 'projects') content = <ProjectsPage onOpenModal={openModal} />
   } else if (role === 'sales') {

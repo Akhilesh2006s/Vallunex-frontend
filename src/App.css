@@ -33,17 +33,55 @@ html[data-theme='dark'] .login-card {
   background: radial-gradient(circle at top, rgba(37, 99, 235, 0.75), rgba(15, 23, 42, 1));
 }
 
-.login-card > * {
+.login-card-inner {
+  display: flex;
   background-color: var(--color-surface);
   border-radius: 27px;
-  padding: 32px 32px 28px;
+  overflow: hidden;
+  min-height: 380px;
 }
 
-.login-header {
+.login-hero {
+  flex: 1.2;
+  padding: 32px 32px 32px;
+  background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.16), transparent 55%);
+  border-right: 1px solid var(--color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+html[data-theme='dark'] .login-hero {
+  background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.5), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.9), #020617);
+  border-right-color: rgba(15, 23, 42, 0.9);
+}
+
+.login-hero-copy {
+  margin-top: 32px;
+  max-width: 340px;
+}
+
+.login-panel {
+  flex: 1;
+  padding: 32px 32px 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+}
+
+.login-panel-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-muted);
 }
 
 .login-logo {
@@ -81,6 +119,12 @@ html[data-theme='dark'] .login-card {
   color: var(--color-text-muted);
 }
 
+.login-title {
+  margin: 0 0 8px;
+  font-size: 28px;
+  letter-spacing: -0.03em;
+}
+
 .theme-toggle {
   border-radius: 999px;
   border: 1px solid var(--color-border-subtle);
@@ -105,9 +149,28 @@ html[data-theme='dark'] .login-card {
 }
 
 .login-subtitle {
-  margin: 4px 0 24px;
+  margin: 4px 0 16px;
   color: var(--color-text-muted);
   font-size: 14px;
+}
+
+.login-highlights {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.login-highlights li::before {
+  content: '•';
+  color: var(--color-primary);
+  display: inline-block;
+  width: 1em;
+  margin-left: 0;
 }
 
 .login-form {
