@@ -43,7 +43,15 @@ export function Topbar({ title, userName, userEmail: _userEmail, onLogout, theme
         >
           <ThemeIcon className="topbar-icon-svg" />
         </button>
-        <button type="button" className="topbar-icon-button" aria-label="Notifications">
+        <button
+          type="button"
+          className="topbar-icon-button"
+          aria-label="Notifications"
+          onClick={() => {
+            // Simple placeholder until a full notifications system is wired up.
+            window.alert('No new notifications right now. Recent updates are shown in the Admin dashboard cards.')
+          }}
+        >
           <Bell className="topbar-icon-svg" />
         </button>
         <div className="topbar-profile">

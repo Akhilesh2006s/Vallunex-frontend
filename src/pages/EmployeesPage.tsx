@@ -133,10 +133,25 @@ export function EmployeesPage({ onOpenModal }: EmployeesPageProps) {
                     </select>
                     {emp.productIds && emp.productIds.length > 0 && (
                       <div className="card-subtitle">
-                        {(emp.productIds || [])
-                          .map((id) => products.find((p) => p.id === id)?.name)
-                          .filter(Boolean)
-                          .join(', ')}
+                        {(emp.productIds || []).map((id) => {
+                          const product = products.find((p) => p.id === id)
+                          if (!product) return null
+                          return (
+                            <span key={id} style={{ marginRight: 6 }}>
+                              {product.name}
+                              <button
+                                type="button"
+                                className="link-button"
+                                onClick={() => {
+                                  const nextIds = (emp.productIds || []).filter((pid) => pid !== id)
+                                  void updateEmployee(emp.id, { productIds: nextIds })
+                                }}
+                              >
+                                ×
+                              </button>
+                            </span>
+                          )
+                        })}
                       </div>
                     )}
                   </td>

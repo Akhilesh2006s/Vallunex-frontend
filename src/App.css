@@ -191,6 +191,7 @@ html[data-theme='dark'] .login-hero {
   padding: 10px 12px;
   background-color: var(--color-surface-subtle);
   font-size: 14px;
+  color: var(--color-text);
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
@@ -979,6 +980,7 @@ html[data-theme='dark'] .login-hero {
   padding: 7px 9px;
   background-color: var(--color-surface-subtle);
   font-size: 13px;
+  color: var(--color-text);
 }
 
 .field-row {
