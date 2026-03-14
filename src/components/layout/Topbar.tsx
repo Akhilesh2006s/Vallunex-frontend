@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { Bell, Moon, Search, SunMedium, X } from 'lucide-react'
+import { Bell, Moon, Search, SunMedium, X, Menu, LogOut } from 'lucide-react'
 import { useAppData } from '../../state/AppDataContext'
-import type { CompanyPortal } from '../../App'
+import type { CompanyPortal, UserRole } from '../../App'
 import type { DashboardSection } from './DashboardLayout'
 
 type TopbarProps = {
@@ -15,6 +15,8 @@ type TopbarProps = {
   searchQuery: string
   onSearchChange: (query: string) => void
   onNavigateToSection: (section: DashboardSection) => void
+  onOpenMobileMenu: () => void
+  userRole: UserRole
 }
 
 export function Topbar({
@@ -28,6 +30,8 @@ export function Topbar({
   searchQuery,
   onSearchChange,
   onNavigateToSection,
+  onOpenMobileMenu,
+  userRole,
 }: TopbarProps) {
   const ThemeIcon = theme === 'light' ? Moon : SunMedium
   const { employees, projects, tasks, leads, products } = useAppData()
@@ -172,9 +176,23 @@ export function Topbar({
     products: { label: 'Products', section: 'products' },
   }
 
+  const roleLabelMap: Record<UserRole, string> = {
+    admin: 'Admin',
+    sales: 'Sales',
+    development: 'Dev',
+  }
+
   return (
     <header className="topbar">
       <div className="topbar-left">
+        <button
+          type="button"
+          className="mobile-menu-button"
+          onClick={onOpenMobileMenu}
+          aria-label="Open menu"
+        >
+          <Menu style={{ width: 20, height: 20 }} />
+        </button>
         <h1 className="topbar-title">{title}</h1>
       </div>
 
@@ -356,6 +374,24 @@ export function Topbar({
               Sign out
             </button>
           </div>
+        </div>
+        <div className="topbar-profile-mobile">
+          <div className={`avatar-circle ${portal === 'amenityforge' ? 'amenity' : ''}`} style={portal === 'amenityforge' ? { background: 'var(--amenity-gradient)' } : undefined}>
+            {initials}
+          </div>
+          <div className="profile-meta-mobile">
+            <span className="profile-name-mobile">{userName}</span>
+            <span className="profile-role-mobile">{roleLabelMap[userRole]}</span>
+          </div>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={onLogout}
+            aria-label="Sign out"
+            style={{ marginLeft: 'auto' }}
+          >
+            <LogOut style={{ width: 16, height: 16 }} />
+          </button>
         </div>
       </div>
     </header>

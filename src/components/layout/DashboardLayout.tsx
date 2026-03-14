@@ -111,10 +111,19 @@ export function DashboardLayout({ user, portal, onLogout, onSwitchPortal, theme,
   const [activeModal, setActiveModal] = useState<ModalType | null>(null)
   const [activeSection, setActiveSection] = useState<DashboardSection>('overview')
   const [searchQuery, setSearchQuery] = useState('')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const role = user.role
 
-  const openModal = (type: ModalType) => setActiveModal(type)
+  const openModal = (type: ModalType) => {
+    setActiveModal(type)
+    setIsMobileMenuOpen(false) // Close mobile menu when opening modal
+  }
   const closeModal = () => setActiveModal(null)
+
+  const handleSectionChange = (section: DashboardSection) => {
+    setActiveSection(section)
+    setIsMobileMenuOpen(false) // Close mobile menu when navigating
+  }
 
   let content: ReactNode = null
 
@@ -128,7 +137,7 @@ export function DashboardLayout({ user, portal, onLogout, onSwitchPortal, theme,
     if (activeSection === 'clients') content = <ClientsPage />
     if (activeSection === 'projects') content = <ProjectsPage onOpenModal={openModal} />
   } else if (role === 'sales') {
-    content = <SalesDashboard onOpenModal={openModal} />
+    content = <SalesDashboard />
   } else if (role === 'development') {
     if (activeSection === 'overview') {
       content = (
@@ -140,19 +149,13 @@ export function DashboardLayout({ user, portal, onLogout, onSwitchPortal, theme,
       )
     }
     if (activeSection === 'devTasks') {
-      content = (
-        <DevTasksPage
-          onOpenModal={openModal}
-          currentUserName={user.name}
-          currentUserEmail={user.email}
-        />
-      )
+      content = <DevTasksPage />
     }
     if (activeSection === 'devPayroll') {
-      content = <DevPayrollPage currentUserName={user.name} currentUserEmail={user.email} />
+      content = <DevPayrollPage />
     }
     if (activeSection === 'devProjects') {
-      content = <DevProjectsPage currentUserName={user.name} currentUserEmail={user.email} />
+      content = <DevProjectsPage />
     }
   }
 
@@ -165,13 +168,19 @@ export function DashboardLayout({ user, portal, onLogout, onSwitchPortal, theme,
 
   return (
     <div className="dashboard-root">
+      <div className={`mobile-menu-overlay ${isMobileMenuOpen ? 'is-open' : ''}`} onClick={() => setIsMobileMenuOpen(false)} />
       <Sidebar
         currentRole={role}
         portal={portal}
         activeSection={activeSection}
-        onChangeSection={setActiveSection}
+        onChangeSection={handleSectionChange}
         onOpenModal={openModal}
-        onSwitchPortal={onSwitchPortal}
+        onSwitchPortal={() => {
+          onSwitchPortal()
+          setIsMobileMenuOpen(false)
+        }}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
       />
       <div className="dashboard-main">
         <Topbar
@@ -184,7 +193,9 @@ export function DashboardLayout({ user, portal, onLogout, onSwitchPortal, theme,
           title={`${portalName} · ${roleLabelMap[role]} Dashboard`}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          onNavigateToSection={setActiveSection}
+          onNavigateToSection={handleSectionChange}
+          onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+          userRole={role}
         />
         <div className="dashboard-inner">
           <RoleActionsBar role={role} portal={portal} onOpenModal={openModal} />

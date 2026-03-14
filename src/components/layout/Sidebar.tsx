@@ -10,6 +10,7 @@ import {
   Package,
   ArrowLeftRight,
   ChevronRight,
+  X,
 } from 'lucide-react'
 import type { UserRole, CompanyPortal } from '../../App'
 import type { DashboardSection } from './DashboardLayout'
@@ -22,9 +23,11 @@ type SidebarProps = {
   onChangeSection: (section: DashboardSection) => void
   onOpenModal: (type: ModalType) => void
   onSwitchPortal: () => void
+  isMobileMenuOpen?: boolean
+  onCloseMobileMenu?: () => void
 }
 
-export function Sidebar({ currentRole, portal, activeSection, onChangeSection, onOpenModal, onSwitchPortal }: SidebarProps) {
+export function Sidebar({ currentRole, portal, activeSection, onChangeSection, onOpenModal, onSwitchPortal, isMobileMenuOpen, onCloseMobileMenu }: SidebarProps) {
   const isAdmin = currentRole === 'admin'
   const isDev = currentRole === 'development'
   const isSales = currentRole === 'sales'
@@ -33,7 +36,7 @@ export function Sidebar({ currentRole, portal, activeSection, onChangeSection, o
   const portalSub = portal === 'rnxa' ? 'Tech & Digital' : 'Services & Ops'
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isMobileMenuOpen ? 'is-open' : ''}`}>
       <div className="sidebar-header">
         <div className={`sidebar-logo ${portal}`}>
           {portal === 'rnxa' ? 'R' : 'A'}
@@ -42,6 +45,17 @@ export function Sidebar({ currentRole, portal, activeSection, onChangeSection, o
           <span className="sidebar-title">{portalName}</span>
           <span className="sidebar-subtitle">{portalSub}</span>
         </div>
+        {onCloseMobileMenu && (
+          <button
+            type="button"
+            className="icon-button"
+            onClick={onCloseMobileMenu}
+            style={{ marginLeft: 'auto', display: 'flex' }}
+            aria-label="Close menu"
+          >
+            <X className="sidebar-icon-svg" />
+          </button>
+        )}
       </div>
 
       <nav className="sidebar-nav">
