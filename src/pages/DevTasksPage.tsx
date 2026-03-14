@@ -1,133 +1,125 @@
-import type { ModalType } from '../components/modals/Modal'
 import { useAppData } from '../state/AppDataContext'
-import { useEffect, useState } from 'react'
 
-type DevTasksPageProps = {
-  onOpenModal: (type: ModalType) => void
-  currentUserName?: string
-  currentUserEmail?: string
-}
+export function DevTasksPage() {
+  const { tasks, updateTask } = useAppData()
 
-export function DevTasksPage({ onOpenModal: _onOpenModal, currentUserName, currentUserEmail }: DevTasksPageProps) {
-  const { employees, tasks, submitTask } = useAppData()
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('')
-
-  useEffect(() => {
-    if ((!currentUserName && !currentUserEmail) || employees.length === 0) return
-
-    setSelectedEmployeeId((prev) => {
-      if (prev) return prev
-
-      const matchByEmail = currentUserEmail
-        ? employees.find((e) => e.email && e.email.toLowerCase() === currentUserEmail.toLowerCase())
-        : undefined
-
-      if (matchByEmail) return matchByEmail.id
-
-      const matchByName = currentUserName ? employees.find((e) => e.name === currentUserName) : undefined
-      return matchByName?.id ?? prev
-    })
-  }, [currentUserName, currentUserEmail, employees])
-
-  const selectedEmployee = employees.find((e) => e.id === selectedEmployeeId) ?? null
-
-  const visibleTasks =
-    selectedEmployee == null
-      ? tasks
-      : tasks.filter((task) => task.assignedTo === selectedEmployee.name)
+  const openTasks = tasks.filter((t) => t.status === 'Open' || t.status === 'Rejected')
+  const submittedTasks = tasks.filter((t) => t.status === 'Submitted')
+  const approvedTasks = tasks.filter((t) => t.status === 'Approved')
 
   return (
     <div className="page-grid">
+      {/* Open / In-progress tasks */}
       <section className="card span-4">
-        <div className="card-header with-actions">
-          <div>
-            <h2>My tasks</h2>
-            <p className="card-subtitle">Tasks assigned by Admin, with links back to your work.</p>
-          </div>
-          <select
-            className="filter-select"
-            value={selectedEmployeeId}
-            onChange={(e) => setSelectedEmployeeId(e.target.value)}
-          >
-            <option value="">All employees</option>
-            {employees.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.name}
-              </option>
-            ))}
-          </select>
+        <div className="card-header">
+          <h2>My Tasks</h2>
+          <p className="card-subtitle">
+            Submit completed tasks for review. Your admin will approve or send back for revisions.
+          </p>
+        </div>
+      </section>
+
+      <section className="card span-2">
+        <div className="card-header">
+          <h2>Open Tasks ({openTasks.length})</h2>
         </div>
         <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Title</th>
-                <th>Owner</th>
-                <th>Due date</th>
+                <th>Task</th>
                 <th>Priority</th>
-                <th>Status</th>
-                <th>Link</th>
+                <th>Deadline</th>
+                <th className="table-actions-col">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {visibleTasks.map((task) => (
+              {openTasks.map((task) => (
                 <tr key={task.id}>
-                  <td>{task.title}</td>
-                  <td>{task.assignedTo}</td>
-                  <td>{task.deadline}</td>
+                  <td style={{ fontWeight: 500 }}>{task.title}</td>
                   <td>
-                    <span
-                      className={`pill ${
-                        task.priority === 'High'
-                          ? 'pill-danger'
-                          : task.priority === 'Medium'
-                            ? 'pill-warning'
-                            : ''
-                      }`}
-                    >
+                    <span className={`pill ${task.priority === 'High' ? 'pill-danger' : task.priority === 'Medium' ? 'pill-warning' : ''}`}>
                       {task.priority}
                     </span>
                   </td>
-                  <td>
-                    <span
-                      className={`pill ${
-                        task.status === 'Approved'
-                          ? 'pill-success'
-                          : task.status === 'Submitted'
-                            ? 'pill-warning'
-                            : task.status === 'Rejected'
-                              ? 'pill-danger'
-                              : ''
-                      }`}
+                  <td>{task.deadline}</td>
+                  <td className="table-actions-col">
+                    <button
+                      type="button"
+                      className="primary-button sm"
+                      onClick={() => void updateTask(task.id, { status: 'Submitted' })}
                     >
-                      {task.status}
-                    </span>
-                  </td>
-                  <td>
-                    {task.submissionLink ? (
-                      <a href={task.submissionLink} target="_blank" rel="noreferrer" className="link-button">
-                        Open
-                      </a>
-                    ) : task.status === 'Open' ? (
-                      <button
-                        type="button"
-                        className="link-button strong"
-                        onClick={() => {
-                          const link = window.prompt('Paste the link to your work (PR, doc, URL)')
-                          if (!link) return
-                          void submitTask(task.id, link)
-                        }}
-                      >
-                        Submit Link
-                      </button>
-                    ) : (
-                      <span className="list-meta">
-                        {task.status === 'Rejected' ? 'Rejected by Admin' : 'Waiting review'}
-                      </span>
-                    )}
+                      Submit
+                    </button>
                   </td>
                 </tr>
               ))}
+              {openTasks.length === 0 && (
+                <tr><td colSpan={4}><div className="empty-state"><div className="empty-state-icon">🎉</div><div className="empty-state-title">All caught up!</div><div className="empty-state-text">No open tasks.</div></div></td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="card span-2">
+        <div className="card-header">
+          <h2>Submitted ({submittedTasks.length})</h2>
+        </div>
+        <div className="table-wrapper">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Priority</th>
+                <th>Deadline</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {submittedTasks.map((task) => (
+                <tr key={task.id}>
+                  <td style={{ fontWeight: 500 }}>{task.title}</td>
+                  <td><span className={`pill ${task.priority === 'High' ? 'pill-danger' : task.priority === 'Medium' ? 'pill-warning' : ''}`}>{task.priority}</span></td>
+                  <td>{task.deadline}</td>
+                  <td><span className="pill pill-info">Pending Review</span></td>
+                </tr>
+              ))}
+              {submittedTasks.length === 0 && (
+                <tr><td colSpan={4}><div className="empty-state"><div className="empty-state-icon">📬</div><div className="empty-state-title">Nothing submitted</div></div></td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Approved Tasks */}
+      <section className="card span-4">
+        <div className="card-header">
+          <h2>✅ Approved ({approvedTasks.length})</h2>
+        </div>
+        <div className="table-wrapper">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Priority</th>
+                <th>Deadline</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {approvedTasks.map((task) => (
+                <tr key={task.id}>
+                  <td style={{ fontWeight: 500 }}>{task.title}</td>
+                  <td><span className={`pill ${task.priority === 'High' ? 'pill-danger' : task.priority === 'Medium' ? 'pill-warning' : ''}`}>{task.priority}</span></td>
+                  <td>{task.deadline}</td>
+                  <td><span className="pill pill-success">Approved</span></td>
+                </tr>
+              ))}
+              {approvedTasks.length === 0 && (
+                <tr><td colSpan={4}><div className="empty-state"><div className="empty-state-icon">📋</div><div className="empty-state-title">No approved tasks yet</div></div></td></tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -135,4 +127,3 @@ export function DevTasksPage({ onOpenModal: _onOpenModal, currentUserName, curre
     </div>
   )
 }
-

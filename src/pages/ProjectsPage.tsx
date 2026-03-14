@@ -7,31 +7,23 @@ type ProjectsPageProps = {
 }
 
 export function ProjectsPage({ onOpenModal }: ProjectsPageProps) {
-  const { employees, projects, addProject, updateProject: _updateProject, deleteProject } = useAppData()
+  const { employees, projects, tasks, addProject, updateProject, deleteProject } = useAppData()
 
-  const [formState, setFormState] = useState<{
-    name: string
-    clientName: string
-    status: ProjectStatus
-    budget: string
-    ownerEmployeeId: string
-  }>({
+  const [formState, setFormState] = useState({
     name: '',
     clientName: '',
-    status: 'Planned',
+    status: 'Planned' as ProjectStatus,
     budget: '',
     ownerEmployeeId: employees[0]?.id ?? '',
   })
 
+  const [filterStatus, setFilterStatus] = useState<'All' | ProjectStatus>('All')
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-
-    if (!formState.name || !formState.clientName || !formState.ownerEmployeeId) {
-      return
-    }
+    if (!formState.name || !formState.clientName || !formState.ownerEmployeeId) return
 
     const numericBudget = formState.budget ? Number(formState.budget) : undefined
-
     await addProject({
       name: formState.name,
       clientName: formState.clientName,
@@ -39,54 +31,71 @@ export function ProjectsPage({ onOpenModal }: ProjectsPageProps) {
       budget: numericBudget,
       ownerEmployeeId: formState.ownerEmployeeId,
     })
-
-    setFormState((prev) => ({
-      ...prev,
-      name: '',
-      clientName: '',
-      budget: '',
-    }))
+    setFormState((prev) => ({ ...prev, name: '', clientName: '', budget: '' }))
   }
 
   const totalProjects = projects.length
   const activeProjects = projects.filter((p) => p.status === 'Planned' || p.status === 'In Progress').length
+  const completedProjects = projects.filter((p) => p.status === 'Completed').length
+
+  const filteredProjects = filterStatus === 'All'
+    ? projects
+    : projects.filter((p) => p.status === filterStatus)
+
+  // Link tasks to projects
+  const getProjectTasks = (projectId: string) => tasks.filter((t) => t.projectId === projectId)
 
   return (
     <div className="page-grid">
+      {/* Stats */}
       <section className="card span-4">
         <div className="card-header with-actions">
           <div>
             <h2>Projects</h2>
             <p className="card-subtitle">
-              Assign multiple projects to the same employee and keep ownership crystal clear.
+              Assign projects to employees, track budgets, and link related tasks.
             </p>
           </div>
-          <button type="button" className="primary-button sm" onClick={() => onOpenModal('addTask')}>
-            + Add related task
-          </button>
+          <div className="page-actions-buttons">
+            <button type="button" className="primary-button sm" onClick={() => onOpenModal('addTask')}>
+              + Add Related Task
+            </button>
+          </div>
         </div>
         <div className="overview-grid three">
           <div className="stat-card">
-            <div className="stat-label">Total projects</div>
+            <div className="stat-label">Total Projects</div>
             <div className="stat-value">{totalProjects}</div>
             <div className="stat-meta">Across all teams</div>
           </div>
           <div className="stat-card">
             <div className="stat-label">Active</div>
             <div className="stat-value">{activeProjects}</div>
-            <div className="stat-meta positive">Planned &amp; in progress</div>
+            <div className="stat-meta positive">Planned & in progress</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">Employees involved</div>
-            <div className="stat-value">{new Set(projects.map((p) => p.ownerEmployeeId)).size}</div>
-            <div className="stat-meta">Can own multiple projects each</div>
+            <div className="stat-label">Completed</div>
+            <div className="stat-value">{completedProjects}</div>
+            <div className="stat-meta positive">Delivered</div>
           </div>
         </div>
       </section>
 
+      {/* Project List */}
       <section className="card span-3">
-        <div className="card-header">
-          <h2>Project list</h2>
+        <div className="card-header with-actions">
+          <h2>Project List</h2>
+          <select
+            className="filter-select"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as 'All' | ProjectStatus)}
+          >
+            <option value="All">All Statuses</option>
+            <option value="Planned">Planned</option>
+            <option value="In Progress">In Progress</option>
+            <option value="On Hold">On Hold</option>
+            <option value="Completed">Completed</option>
+          </select>
         </div>
         <div className="table-wrapper">
           <table className="data-table">
@@ -97,64 +106,80 @@ export function ProjectsPage({ onOpenModal }: ProjectsPageProps) {
                 <th>Owner</th>
                 <th>Status</th>
                 <th>Budget</th>
-                <th className="table-actions-col">Action</th>
+                <th>Tasks</th>
+                <th className="table-actions-col">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {projects.map((project) => (
-                <tr key={project.id}>
-                  <td>{project.name}</td>
-                  <td>{project.clientName}</td>
-                  <td>{project.ownerEmployeeName}</td>
-                  <td>
-                    <span
-                      className={`pill ${
-                        project.status === 'Completed'
-                          ? 'pill-success'
-                          : project.status === 'On Hold'
-                            ? 'pill-warning'
-                            : ''
-                      }`}
-                    >
-                      {project.status}
-                    </span>
-                  </td>
-                  <td>
-                    {typeof project.budget === 'number'
-                      ? project.budget.toLocaleString('en-IN', {
-                          style: 'currency',
-                          currency: 'INR',
-                          maximumFractionDigits: 0,
-                        })
-                      : '—'}
-                  </td>
-                  <td className="table-actions-col">
-                    <button
-                      type="button"
-                      className="link-button"
-                      onClick={() => {
-                        const ok = window.confirm(`Remove project "${project.name}"?`)
-                        if (!ok) return
-                        void deleteProject(project.id)
-                      }}
-                    >
-                      Remove
-                    </button>
+              {filteredProjects.map((project) => {
+                const projectTasks = getProjectTasks(project.id)
+                return (
+                  <tr key={project.id}>
+                    <td style={{ fontWeight: 600 }}>{project.name}</td>
+                    <td>{project.clientName}</td>
+                    <td>{project.ownerEmployeeName}</td>
+                    <td>
+                      <select
+                        className="filter-select"
+                        value={project.status}
+                        onChange={(e) => void updateProject(project.id, { status: e.target.value as ProjectStatus })}
+                      >
+                        <option value="Planned">Planned</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="On Hold">On Hold</option>
+                        <option value="Completed">Completed</option>
+                      </select>
+                    </td>
+                    <td>
+                      {typeof project.budget === 'number'
+                        ? project.budget.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })
+                        : '—'}
+                    </td>
+                    <td>
+                      {projectTasks.length > 0 ? (
+                        <span className="pill pill-info">{projectTasks.length} task{projectTasks.length > 1 ? 's' : ''}</span>
+                      ) : (
+                        <span className="list-meta">None</span>
+                      )}
+                    </td>
+                    <td className="table-actions-col">
+                      <button
+                        type="button"
+                        className="link-button danger"
+                        onClick={() => {
+                          if (window.confirm(`Remove project "${project.name}"?`)) void deleteProject(project.id)
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+              {filteredProjects.length === 0 && (
+                <tr>
+                  <td colSpan={7}>
+                    <div className="empty-state">
+                      <div className="empty-state-icon">📁</div>
+                      <div className="empty-state-title">No projects found</div>
+                      <div className="empty-state-text">Create a new project to get started.</div>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
       </section>
 
+      {/* Add Project Form */}
       <section className="card span-1">
         <div className="card-header">
-          <h2>Assign new project</h2>
+          <h2>New Project</h2>
         </div>
         <form className="modal-form" onSubmit={handleSubmit}>
           <div className="field-group">
-            <label htmlFor="project-name">Project name</label>
+            <label htmlFor="project-name">Project Name</label>
             <input
               id="project-name"
               value={formState.name}
@@ -171,30 +196,26 @@ export function ProjectsPage({ onOpenModal }: ProjectsPageProps) {
               placeholder="Acme Corp"
             />
           </div>
+          <div className="field-group">
+            <label htmlFor="project-owner">Assign To</label>
+            <select
+              id="project-owner"
+              value={formState.ownerEmployeeId}
+              onChange={(e) => setFormState((prev) => ({ ...prev, ownerEmployeeId: e.target.value }))}
+            >
+              <option value="">Select employee</option>
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>{emp.name}</option>
+              ))}
+            </select>
+          </div>
           <div className="field-row">
-            <div className="field-group">
-              <label htmlFor="project-owner">Assign to employee</label>
-              <select
-                id="project-owner"
-                value={formState.ownerEmployeeId}
-                onChange={(e) => setFormState((prev) => ({ ...prev, ownerEmployeeId: e.target.value }))}
-              >
-                <option value="">Select employee</option>
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name}
-                  </option>
-                ))}
-              </select>
-            </div>
             <div className="field-group">
               <label htmlFor="project-status">Status</label>
               <select
                 id="project-status"
                 value={formState.status}
-                onChange={(e) =>
-                  setFormState((prev) => ({ ...prev, status: e.target.value as ProjectStatus }))
-                }
+                onChange={(e) => setFormState((prev) => ({ ...prev, status: e.target.value as ProjectStatus }))}
               >
                 <option value="Planned">Planned</option>
                 <option value="In Progress">In Progress</option>
@@ -202,22 +223,21 @@ export function ProjectsPage({ onOpenModal }: ProjectsPageProps) {
                 <option value="Completed">Completed</option>
               </select>
             </div>
+            <div className="field-group">
+              <label htmlFor="project-budget">Budget (₹)</label>
+              <input
+                id="project-budget"
+                type="number"
+                min="0"
+                value={formState.budget}
+                onChange={(e) => setFormState((prev) => ({ ...prev, budget: e.target.value }))}
+                placeholder="100000"
+              />
+            </div>
           </div>
-          <div className="field-group">
-            <label htmlFor="project-budget">Budget (optional)</label>
-            <input
-              id="project-budget"
-              type="number"
-              min="0"
-              value={formState.budget}
-              onChange={(e) => setFormState((prev) => ({ ...prev, budget: e.target.value }))}
-              placeholder="100000"
-            />
-          </div>
-
           <div className="modal-footer">
             <button type="submit" className="primary-button sm">
-              Assign project
+              Create Project
             </button>
           </div>
         </form>
@@ -225,4 +245,3 @@ export function ProjectsPage({ onOpenModal }: ProjectsPageProps) {
     </div>
   )
 }
-

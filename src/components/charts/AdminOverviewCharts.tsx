@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   Bar,
   BarChart,
@@ -18,18 +19,24 @@ type AdminOverviewChartsProps = {
 }
 
 export function AdminOverviewCharts({ tasks, leads }: AdminOverviewChartsProps) {
-  const taskStatusData = [
-    { name: 'Open', value: tasks.filter((t) => t.status === 'Open').length },
-    { name: 'Submitted', value: tasks.filter((t) => t.status === 'Submitted').length },
-    { name: 'Approved', value: tasks.filter((t) => t.status === 'Approved').length },
-  ]
+  const taskStatusData = useMemo(
+    () => [
+      { name: 'Open', value: tasks.filter((t) => t.status === 'Open').length },
+      { name: 'Submitted', value: tasks.filter((t) => t.status === 'Submitted').length },
+      { name: 'Approved', value: tasks.filter((t) => t.status === 'Approved').length },
+    ],
+    [tasks],
+  )
 
-  const leadStatusData = [
-    { name: 'New', value: leads.filter((l) => l.status === 'New').length },
-    { name: 'In Review', value: leads.filter((l) => l.status === 'In Review').length },
-    { name: 'Negotiation', value: leads.filter((l) => l.status === 'Negotiation').length },
-    { name: 'Client', value: leads.filter((l) => l.status === 'Client').length },
-  ]
+  const leadStatusData = useMemo(
+    () => [
+      { name: 'New', value: leads.filter((l) => l.status === 'New').length },
+      { name: 'In Review', value: leads.filter((l) => l.status === 'In Review').length },
+      { name: 'Negotiation', value: leads.filter((l) => l.status === 'Negotiation').length },
+      { name: 'Client', value: leads.filter((l) => l.status === 'Client').length },
+    ],
+    [leads],
+  )
 
   return (
     <div className="admin-charts-grid">
@@ -37,7 +44,7 @@ export function AdminOverviewCharts({ tasks, leads }: AdminOverviewChartsProps) 
         <h3 className="admin-chart-title">Tasks by status</h3>
         <p className="admin-chart-subtitle">Live breakdown of work across the workflow.</p>
         <div className="admin-chart-body">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={200}>
             <BarChart data={taskStatusData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
               <XAxis dataKey="name" tickLine={false} axisLine={false} />
@@ -54,7 +61,7 @@ export function AdminOverviewCharts({ tasks, leads }: AdminOverviewChartsProps) 
         <h3 className="admin-chart-title">Leads & clients</h3>
         <p className="admin-chart-subtitle">Pipeline health across the sales funnel.</p>
         <div className="admin-chart-body">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Tooltip />
               <Legend />

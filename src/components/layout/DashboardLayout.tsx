@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { User, UserRole } from '../../App'
+import type { User, UserRole, CompanyPortal } from '../../App'
 import { AdminDashboard } from '../../pages/AdminDashboard'
 import { SalesDashboard } from '../../pages/SalesDashboard'
 import { DevelopmentDashboard } from '../../pages/DevelopmentDashboard'
@@ -20,12 +20,14 @@ import { Modal, type ModalType } from '../modals/Modal'
 
 type DashboardLayoutProps = {
   user: User
+  portal: CompanyPortal
   onLogout: () => void
+  onSwitchPortal: () => void
   theme: 'light' | 'dark'
   onToggleTheme: () => void
 }
 
-type DashboardSection =
+export type DashboardSection =
   | 'overview'
   | 'employees'
   | 'payroll'
@@ -40,19 +42,31 @@ type DashboardSection =
 
 function RoleActionsBar({
   role,
+  portal,
   onOpenModal,
 }: {
   role: UserRole
+  portal: CompanyPortal
   onOpenModal: (type: ModalType) => void
 }) {
+  const portalName = portal === 'rnxa' ? 'RNXA' : 'Amenityforge'
+
   if (role === 'admin') {
     return (
       <div className="page-actions-row">
         <div>
-          <h2 className="page-actions-title">Admin workspace</h2>
+          <h2 className="page-actions-title">{portalName} – Admin Workspace</h2>
           <p className="page-actions-subtitle">
-            High-level overview of company metrics, workload and deadlines. Use the sidebar for actions.
+            Complete overview of company metrics, team workload, deadlines and financials.
           </p>
+        </div>
+        <div className="page-actions-buttons">
+          <button type="button" className="primary-button sm" onClick={() => onOpenModal('addEmployee')}>
+            + Add Member
+          </button>
+          <button type="button" className="secondary-button" onClick={() => onOpenModal('addTask')}>
+            + New Task
+          </button>
         </div>
       </div>
     )
@@ -62,12 +76,12 @@ function RoleActionsBar({
     return (
       <div className="page-actions-row">
         <div>
-          <h2 className="page-actions-title">Sales workspace</h2>
-          <p className="page-actions-subtitle">Track pipeline, convert leads and stay on top of meetings.</p>
+          <h2 className="page-actions-title">{portalName} – Sales Workspace</h2>
+          <p className="page-actions-subtitle">Track pipeline, convert leads and stay on top of client engagements.</p>
         </div>
         <div className="page-actions-buttons">
           <button type="button" className="primary-button sm" onClick={() => onOpenModal('addLead')}>
-            + Add lead
+            + Add Lead
           </button>
         </div>
       </div>
@@ -78,12 +92,12 @@ function RoleActionsBar({
     return (
       <div className="page-actions-row">
         <div>
-          <h2 className="page-actions-title">Development workspace</h2>
-          <p className="page-actions-subtitle">Submit links, review sprints and keep delivery on track.</p>
+          <h2 className="page-actions-title">{portalName} – Development Workspace</h2>
+          <p className="page-actions-subtitle">Submit work, review sprints and keep delivery on track.</p>
         </div>
         <div className="page-actions-buttons">
           <button type="button" className="primary-button sm" onClick={() => onOpenModal('addTask')}>
-            + New internal task
+            + New Task
           </button>
         </div>
       </div>
@@ -93,9 +107,10 @@ function RoleActionsBar({
   return null
 }
 
-export function DashboardLayout({ user, onLogout, theme, onToggleTheme }: DashboardLayoutProps) {
+export function DashboardLayout({ user, portal, onLogout, onSwitchPortal, theme, onToggleTheme }: DashboardLayoutProps) {
   const [activeModal, setActiveModal] = useState<ModalType | null>(null)
   const [activeSection, setActiveSection] = useState<DashboardSection>('overview')
+  const [searchQuery, setSearchQuery] = useState('')
   const role = user.role
 
   const openModal = (type: ModalType) => setActiveModal(type)
@@ -104,7 +119,7 @@ export function DashboardLayout({ user, onLogout, theme, onToggleTheme }: Dashbo
   let content: ReactNode = null
 
   if (role === 'admin') {
-    if (activeSection === 'overview') content = <AdminDashboard onOpenModal={openModal} />
+    if (activeSection === 'overview') content = <AdminDashboard onOpenModal={openModal} portal={portal} />
     if (activeSection === 'employees') content = <EmployeesPage onOpenModal={openModal} />
     if (activeSection === 'payroll') content = <PayrollPage />
     if (activeSection === 'leads') content = <LeadsPage />
@@ -141,6 +156,7 @@ export function DashboardLayout({ user, onLogout, theme, onToggleTheme }: Dashbo
     }
   }
 
+  const portalName = portal === 'rnxa' ? 'RNXA' : 'Amenityforge'
   const roleLabelMap: Record<UserRole, string> = {
     admin: 'Admin',
     sales: 'Sales',
@@ -151,21 +167,27 @@ export function DashboardLayout({ user, onLogout, theme, onToggleTheme }: Dashbo
     <div className="dashboard-root">
       <Sidebar
         currentRole={role}
+        portal={portal}
         activeSection={activeSection}
         onChangeSection={setActiveSection}
         onOpenModal={openModal}
+        onSwitchPortal={onSwitchPortal}
       />
       <div className="dashboard-main">
         <Topbar
           userName={user.name}
           userEmail={user.email}
+          portal={portal}
           onLogout={onLogout}
           theme={theme}
           onToggleTheme={onToggleTheme}
-          title={`${roleLabelMap[role]} Dashboard`}
+          title={`${portalName} · ${roleLabelMap[role]} Dashboard`}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onNavigateToSection={setActiveSection}
         />
         <div className="dashboard-inner">
-          <RoleActionsBar role={role} onOpenModal={openModal} />
+          <RoleActionsBar role={role} portal={portal} onOpenModal={openModal} />
           <main className="dashboard-content">{content}</main>
         </div>
       </div>
@@ -174,5 +196,3 @@ export function DashboardLayout({ user, onLogout, theme, onToggleTheme }: Dashbo
     </div>
   )
 }
-
- 

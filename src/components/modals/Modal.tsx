@@ -9,7 +9,7 @@ type ModalProps = {
 }
 
 export function Modal({ type, onClose }: ModalProps) {
-  const { employees, addEmployee, approveAllPayroll, addTask, addLead, addProject } = useAppData()
+  const { employees, projects, addEmployee, approveAllPayroll, addTask, addLead, addProject } = useAppData()
 
   const [employeeName, setEmployeeName] = useState('')
   const [employeeEmail, setEmployeeEmail] = useState('')
@@ -20,6 +20,7 @@ export function Modal({ type, onClose }: ModalProps) {
   const [taskPriority, setTaskPriority] = useState<TaskPriority>('Medium')
   const [taskDeadline, setTaskDeadline] = useState('')
   const [taskAssignee, setTaskAssignee] = useState('')
+  const [taskProjectId, setTaskProjectId] = useState('')
 
   const [leadClientName, setLeadClientName] = useState('')
   const [leadValue, setLeadValue] = useState('')
@@ -68,6 +69,7 @@ export function Modal({ type, onClose }: ModalProps) {
         // Only allow assigning to employees that Admin has added.
         assignedTo: taskAssignee,
         status: 'Open',
+        projectId: taskProjectId || undefined,
       })
       onClose()
       return
@@ -222,6 +224,24 @@ export function Modal({ type, onClose }: ModalProps) {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="field-group">
+                <label htmlFor="taskProject">Related project (optional)</label>
+                <select
+                  id="taskProject"
+                  value={taskProjectId}
+                  onChange={(e) => setTaskProjectId(e.target.value)}
+                >
+                  <option value="">No project</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="field-helper-text">
+                  Link this task to a specific project. Tasks are saved with their project association.
+                </p>
               </div>
             </form>
           )}

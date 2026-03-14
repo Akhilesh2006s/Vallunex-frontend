@@ -19,14 +19,11 @@ export function PayrollPage() {
 
   const handleSaveEdit = async () => {
     if (!editingId) return
-
     const parsed = Number(editingSalary)
     if (Number.isNaN(parsed) || parsed < 0) {
-      // Simple client-side guard; backend still owns final validation.
       window.alert('Enter a valid monthly salary amount.')
       return
     }
-
     await updateEmployee(editingId, { salary: parsed })
     setEditingId(null)
     setEditingSalary('')
@@ -35,61 +32,55 @@ export function PayrollPage() {
   const totalPayroll = employees.reduce((sum, emp) => sum + emp.salary, 0)
   const pendingEmployees = employees.filter((emp) => emp.status === 'Pending')
   const pendingAmount = pendingEmployees.reduce((sum, emp) => sum + emp.salary, 0)
+  const paidAmount = totalPayroll - pendingAmount
 
   return (
     <div className="page-grid">
       <section className="card span-4">
         <div className="card-header with-actions">
           <div>
-            <h2>Payroll Overview</h2>
-            <p className="card-subtitle">Live view of salary obligations and approval status.</p>
+            <h2>Payroll Management</h2>
+            <p className="card-subtitle">Track salaries, approval status and process payroll batches.</p>
           </div>
           {pendingEmployees.length > 0 && (
-            <button
-              type="button"
-              className="primary-button sm"
-              onClick={() => {
-                void approveAllPayroll()
-              }}
-            >
-              Approve all pending
+            <button type="button" className="primary-button sm success" onClick={() => void approveAllPayroll()}>
+              ✓ Approve All Pending ({pendingEmployees.length})
             </button>
           )}
         </div>
-        <div className="overview-grid three">
+        <div className="overview-grid">
           <div className="stat-card">
-            <div className="stat-label">Total payroll</div>
+            <div className="stat-label">Total Payroll</div>
             <div className="stat-value">
-              {totalPayroll.toLocaleString('en-IN', {
-                style: 'currency',
-                currency: 'INR',
-                maximumFractionDigits: 0,
-              })}
+              {totalPayroll.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
             </div>
-            <div className="stat-meta">All employees</div>
+            <div className="stat-meta">Monthly obligation</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">Pending amount</div>
+            <div className="stat-label">Pending Amount</div>
             <div className="stat-value">
-              {pendingAmount.toLocaleString('en-IN', {
-                style: 'currency',
-                currency: 'INR',
-                maximumFractionDigits: 0,
-              })}
+              {pendingAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
             </div>
             <div className="stat-meta">Awaiting approval</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">Pending employees</div>
+            <div className="stat-label">Processed</div>
+            <div className="stat-value">
+              {paidAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
+            </div>
+            <div className="stat-meta positive">Already paid</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Pending Headcount</div>
             <div className="stat-value">{pendingEmployees.length}</div>
-            <div className="stat-meta">Will be marked paid on approval</div>
+            <div className="stat-meta">of {employees.length} employees</div>
           </div>
         </div>
       </section>
 
       <section className="card span-4">
         <div className="card-header">
-          <h2>Payroll details (monthly)</h2>
+          <h2>Payroll Details (Monthly)</h2>
         </div>
         <div className="table-wrapper">
           <table className="data-table">
@@ -97,16 +88,16 @@ export function PayrollPage() {
               <tr>
                 <th>Employee</th>
                 <th>Role</th>
-                <th>Monthly salary</th>
+                <th>Monthly Salary</th>
                 <th>Status</th>
-                <th className="table-actions-col">Action</th>
+                <th className="table-actions-col">Actions</th>
               </tr>
             </thead>
             <tbody>
               {employees.map((emp) => (
                 <tr key={emp.id}>
-                  <td>{emp.name}</td>
-                  <td>{emp.role}</td>
+                  <td style={{ fontWeight: 600 }}>{emp.name}</td>
+                  <td><span className="pill pill-info">{emp.role}</span></td>
                   <td>
                     {editingId === emp.id ? (
                       <div className="inline-edit">
@@ -114,17 +105,13 @@ export function PayrollPage() {
                           type="number"
                           min={0}
                           className="form-select"
+                          style={{ maxWidth: 140, padding: '6px 10px' }}
                           value={editingSalary}
                           onChange={(e) => setEditingSalary(e.target.value)}
+                          autoFocus
                         />
                         <div className="inline-edit-actions">
-                          <button
-                            type="button"
-                            className="link-button strong"
-                            onClick={() => {
-                              void handleSaveEdit()
-                            }}
-                          >
+                          <button type="button" className="link-button strong" onClick={() => void handleSaveEdit()}>
                             Save
                           </button>
                           <button type="button" className="link-button" onClick={handleCancelEdit}>
@@ -134,18 +121,10 @@ export function PayrollPage() {
                       </div>
                     ) : (
                       <div className="inline-read">
-                        <div>
-                          {emp.salary.toLocaleString('en-IN', {
-                            style: 'currency',
-                            currency: 'INR',
-                            maximumFractionDigits: 0,
-                          })}
-                        </div>
-                        <button
-                          type="button"
-                          className="link-button"
-                          onClick={() => handleStartEdit(emp.id, emp.salary)}
-                        >
+                        <span>
+                          {emp.salary.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
+                        </span>
+                        <button type="button" className="link-button" onClick={() => handleStartEdit(emp.id, emp.salary)}>
                           Edit
                         </button>
                       </div>
@@ -157,20 +136,27 @@ export function PayrollPage() {
                     </span>
                   </td>
                   <td className="table-actions-col">
-                    {emp.status === 'Pending' && (
-                      <button
-                        type="button"
-                        className="link-button strong"
-                        onClick={() => {
-                          void approveEmployee(emp.id)
-                        }}
-                      >
-                        Mark paid
+                    {emp.status === 'Pending' ? (
+                      <button type="button" className="link-button strong" onClick={() => void approveEmployee(emp.id)}>
+                        Mark Paid
                       </button>
+                    ) : (
+                      <span className="list-meta">Processed</span>
                     )}
                   </td>
                 </tr>
               ))}
+              {employees.length === 0 && (
+                <tr>
+                  <td colSpan={5}>
+                    <div className="empty-state">
+                      <div className="empty-state-icon">💰</div>
+                      <div className="empty-state-title">No employees</div>
+                      <div className="empty-state-text">Add team members to manage payroll.</div>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -178,4 +164,3 @@ export function PayrollPage() {
     </div>
   )
 }
-

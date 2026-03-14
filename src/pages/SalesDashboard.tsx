@@ -1,180 +1,205 @@
-import type { ModalType } from '../components/modals/Modal'
-import { useAppData } from '../state/AppDataContext'
+import { useState, type FormEvent } from 'react'
+import {
+  useAppData,
+  type LeadTemperature,
+  type LeadStatus,
+  type LeadValuePeriod,
+} from '../state/AppDataContext'
 
-type SalesDashboardProps = {
-  onOpenModal: (type: ModalType) => void
-}
+export function SalesDashboard() {
+  const { leads, addLead, updateLead, convertLeadToClient, deleteLead } = useAppData()
 
-export function SalesDashboard({ onOpenModal }: SalesDashboardProps) {
-  const { leads, convertLeadToClient } = useAppData()
+  const [leadName, setLeadName] = useState('')
+  const [leadValue, setLeadValue] = useState('')
+  const [leadRep, setLeadRep] = useState('')
+  const [leadTemperature, setLeadTemperature] = useState<LeadTemperature>('Cold')
+  const [leadStatus, setLeadStatus] = useState<LeadStatus>('New')
+  const [leadValuePeriod, setLeadValuePeriod] = useState<LeadValuePeriod>('Monthly')
 
-  const totalRevenue = leads
-    .filter((lead) => lead.status === 'Client' && lead.valuePeriod === 'Monthly')
-    .reduce((sum, lead) => sum + lead.value, 0)
-  const dealsClosed = leads.filter((lead) => lead.status === 'Client').length
+  const handleAddLead = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!leadName || !leadValue) return
+    const numericValue = Number(leadValue)
+    if (Number.isNaN(numericValue)) return
+
+    await addLead({
+      clientName: leadName,
+      value: numericValue,
+      salesRep: leadRep || 'Unassigned',
+      status: leadStatus,
+      temperature: leadTemperature,
+      valuePeriod: leadValuePeriod,
+    })
+
+    setLeadName('')
+    setLeadValue('')
+    setLeadRep('')
+    setLeadTemperature('Cold')
+    setLeadStatus('New')
+    setLeadValuePeriod('Monthly')
+  }
+
+  const pipelineLeads = leads.filter((lead) => lead.status !== 'Client')
+  const clients = leads.filter((lead) => lead.status === 'Client')
+  const totalPipelineValue = pipelineLeads.reduce((s, l) => s + l.value, 0)
+  const hotLeads = pipelineLeads.filter((l) => l.temperature === 'Hot').length
+  const warmLeads = pipelineLeads.filter((l) => l.temperature === 'Warm').length
+  const coldLeads = pipelineLeads.filter((l) => l.temperature === 'Cold').length
 
   return (
     <div className="page-grid">
+      {/* Stats */}
       <section className="card span-4">
         <div className="card-header">
-          <h2>Sales Overview</h2>
+          <h2>Sales Dashboard</h2>
+          <p className="card-subtitle">Manage your pipeline, track leads and close deals.</p>
         </div>
-        <div className="overview-grid three">
+        <div className="overview-grid">
           <div className="stat-card">
-            <div className="stat-label">Revenue this month (INR)</div>
-            <div className="stat-value">
-              {totalRevenue.toLocaleString('en-IN', {
-                style: 'currency',
-                currency: 'INR',
-                maximumFractionDigits: 0,
-              })}
-            </div>
-            <div className="stat-meta positive">From converted clients</div>
+            <div className="stat-label">Pipeline</div>
+            <div className="stat-value">{pipelineLeads.length}</div>
+            <div className="stat-meta">Active leads</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">Targets</div>
-            <div className="stat-value">92%</div>
-            <div className="stat-meta">of monthly quota</div>
+            <div className="stat-label">Pipeline Value</div>
+            <div className="stat-value">
+              {totalPipelineValue.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
+            </div>
+            <div className="stat-meta">Total expected</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">🔥 Hot</div>
+            <div className="stat-value">{hotLeads}</div>
+            <div className="stat-meta positive">Ready to convert</div>
           </div>
           <div className="stat-card">
             <div className="stat-label">Clients</div>
-            <div className="stat-value">{dealsClosed}</div>
-            <div className="stat-meta">Leads converted to clients</div>
+            <div className="stat-value">{clients.length}</div>
+            <div className="stat-meta positive">Converted</div>
           </div>
         </div>
       </section>
 
+      {/* Lead List */}
       <section className="card span-3">
         <div className="card-header with-actions">
-          <div>
-            <h2>Leads</h2>
-            <p className="card-subtitle">Convert leads to clients with a single click.</p>
+          <h2>Pipeline Leads</h2>
+          <div style={{ display: 'flex', gap: 8, fontSize: 13 }}>
+            <span>❄️ Cold: {coldLeads}</span>
+            <span>🌤 Warm: {warmLeads}</span>
+            <span>🔥 Hot: {hotLeads}</span>
           </div>
-          <button type="button" className="primary-button sm" onClick={() => onOpenModal('addLead')}>
-            + Add Lead
-          </button>
         </div>
         <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Client Name</th>
+                <th>Client</th>
+                <th>Temperature</th>
                 <th>Status</th>
-                <th>Expected value</th>
-                <th>Assigned Rep</th>
-                <th className="table-actions-col">Action</th>
+                <th>Value</th>
+                <th>Rep</th>
+                <th className="table-actions-col">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {leads.map((lead) => (
+              {pipelineLeads.map((lead) => (
                 <tr key={lead.id}>
-                  <td>{lead.clientName}</td>
+                  <td style={{ fontWeight: 600 }}>{lead.clientName}</td>
                   <td>
-                    <span
-                      className={`pill ${
-                        lead.status === 'Client'
-                          ? 'pill-success'
-                          : lead.status === 'In Review' || lead.status === 'Negotiation'
-                            ? 'pill-warning'
-                            : ''
-                      }`}
+                    <select
+                      className="filter-select"
+                      value={lead.temperature}
+                      onChange={(e) => void updateLead(lead.id, { temperature: e.target.value as LeadTemperature })}
                     >
-                      {lead.status}
-                    </span>
+                      <option value="Cold">❄️ Cold</option>
+                      <option value="Warm">🌤 Warm</option>
+                      <option value="Hot">🔥 Hot</option>
+                    </select>
                   </td>
                   <td>
-                    {lead.value.toLocaleString('en-IN', {
-                      style: 'currency',
-                      currency: 'INR',
-                      maximumFractionDigits: 0,
-                    })}{' '}
-                    <span className="card-subtitle">{lead.valuePeriod === 'Monthly' ? 'per month' : 'per year'}</span>
+                    <select
+                      className="filter-select"
+                      value={lead.status}
+                      onChange={(e) => void updateLead(lead.id, { status: e.target.value as LeadStatus })}
+                    >
+                      <option value="New">New</option>
+                      <option value="In Review">In Review</option>
+                      <option value="Negotiation">Negotiation</option>
+                    </select>
+                  </td>
+                  <td>
+                    {lead.value.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
                   </td>
                   <td>{lead.salesRep}</td>
                   <td className="table-actions-col">
-                    {lead.status !== 'Client' && (
-                      <button
-                        type="button"
-                        className="link-button strong"
-                        onClick={() => convertLeadToClient(lead.id)}
-                      >
-                        Convert to Client
-                      </button>
-                    )}
+                    <button type="button" className="link-button strong" onClick={() => void convertLeadToClient(lead.id)}>
+                      Convert
+                    </button>
+                    <button
+                      type="button"
+                      className="link-button danger"
+                      onClick={() => { if (window.confirm(`Delete "${lead.clientName}"?`)) void deleteLead(lead.id) }}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
+              {pipelineLeads.length === 0 && (
+                <tr><td colSpan={6}><div className="empty-state"><div className="empty-state-icon">📊</div><div className="empty-state-title">No leads in pipeline</div></div></td></tr>
+              )}
             </tbody>
           </table>
         </div>
       </section>
 
-      <section className="card span-3">
-        <div className="card-header with-actions">
-          <div>
-            <h2>Action Items</h2>
+      {/* Add Lead Form */}
+      <section className="card span-1">
+        <div className="card-header"><h2>New Lead</h2></div>
+        <form className="modal-form" onSubmit={handleAddLead}>
+          <div className="field-group">
+            <label htmlFor="lead-name">Client Name</label>
+            <input id="lead-name" value={leadName} onChange={(e) => setLeadName(e.target.value)} placeholder="Tech Corp" />
           </div>
-          <select className="filter-select" defaultValue="all">
-            <option value="all">All Statuses</option>
-            <option value="new">New</option>
-            <option value="in-progress">In Progress</option>
-            <option value="won">Won</option>
-          </select>
-        </div>
-        <ul className="list">
-          <li>
-            <div className="list-title">Follow up with Acme Industries</div>
-            <div className="list-meta">Due today • Owner: Jordan Lee</div>
-          </li>
-          <li>
-            <div className="list-title">Prepare proposal for Greenfield Retail</div>
-            <div className="list-meta">Tomorrow • Owner: Alex Kim</div>
-          </li>
-          <li>
-            <div className="list-title">Q2 pipeline review</div>
-            <div className="list-meta">Friday • Owner: Sales Leadership</div>
-          </li>
-        </ul>
-      </section>
-
-      <section className="card span-2">
-        <div className="card-header">
-          <h2>Meeting Schedule</h2>
-        </div>
-        <ul className="list">
-          <li>
-            <div className="list-title">Discovery call – Nova Health</div>
-            <div className="list-meta">Today • 2:00 PM</div>
-          </li>
-          <li>
-            <div className="list-title">Demo – Brightline Logistics</div>
-            <div className="list-meta">Tomorrow • 11:30 AM</div>
-          </li>
-          <li>
-            <div className="list-title">Quarterly forecast review</div>
-            <div className="list-meta">Friday • 4:00 PM</div>
-          </li>
-        </ul>
-      </section>
-
-      <section className="card span-4">
-        <div className="card-header">
-          <h2>Performance</h2>
-          <p className="card-subtitle">Chart placeholder – integrate analytics of your choice.</p>
-        </div>
-        <div className="chart-placeholder">
-          <div className="chart-bars">
-            <div className="chart-bar" />
-            <div className="chart-bar" />
-            <div className="chart-bar" />
-            <div className="chart-bar" />
-            <div className="chart-bar" />
+          <div className="field-group">
+            <label htmlFor="lead-value">Deal Value (₹)</label>
+            <input id="lead-value" type="number" min="0" value={leadValue} onChange={(e) => setLeadValue(e.target.value)} placeholder="500000" />
           </div>
-          <div className="chart-footer">Monthly revenue trend (sample only)</div>
-        </div>
+          <div className="field-group">
+            <label htmlFor="lead-period">Period</label>
+            <select id="lead-period" value={leadValuePeriod} onChange={(e) => setLeadValuePeriod(e.target.value as LeadValuePeriod)}>
+              <option value="Monthly">Monthly</option>
+              <option value="Yearly">Yearly</option>
+            </select>
+          </div>
+          <div className="field-group">
+            <label htmlFor="lead-rep">Sales Rep</label>
+            <input id="lead-rep" value={leadRep} onChange={(e) => setLeadRep(e.target.value)} placeholder="Unassigned" />
+          </div>
+          <div className="field-row">
+            <div className="field-group">
+              <label htmlFor="lead-temp">Temperature</label>
+              <select id="lead-temp" value={leadTemperature} onChange={(e) => setLeadTemperature(e.target.value as LeadTemperature)}>
+                <option value="Cold">Cold</option>
+                <option value="Warm">Warm</option>
+                <option value="Hot">Hot</option>
+              </select>
+            </div>
+            <div className="field-group">
+              <label htmlFor="lead-status">Status</label>
+              <select id="lead-status" value={leadStatus} onChange={(e) => setLeadStatus(e.target.value as LeadStatus)}>
+                <option value="New">New</option>
+                <option value="In Review">In Review</option>
+                <option value="Negotiation">Negotiation</option>
+              </select>
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button type="submit" className="primary-button sm">Add Lead</button>
+          </div>
+        </form>
       </section>
     </div>
   )
 }
-
-

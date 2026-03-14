@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import type { CompanyPortal } from '../App'
 
 export type EmployeeStatus = 'Paid' | 'Pending'
 
@@ -26,6 +27,7 @@ export type Task = {
   assignedTo: string
   status: TaskStatus
   submissionLink?: string
+  projectId?: string
 }
 
 export type LeadStatus = 'New' | 'In Review' | 'Negotiation' | 'Client'
@@ -81,7 +83,7 @@ type AppDataContextValue = AppDataSnapshot & {
   deleteEmployee: (id: string) => void
 
   addTask: (input: Omit<Task, 'id'>) => void
-  updateTask: (id: string, changes: Partial<Pick<Task, 'title' | 'priority' | 'deadline' | 'assignedTo' | 'status'>>) => void
+  updateTask: (id: string, changes: Partial<Pick<Task, 'title' | 'priority' | 'deadline' | 'assignedTo' | 'status' | 'projectId'>>) => void
   deleteTask: (id: string) => void
   submitTask: (id: string, submissionLink: string) => void
   approveTask: (id: string) => void
@@ -124,9 +126,10 @@ const AppDataContext = createContext<AppDataContextValue | undefined>(undefined)
 type AppDataProviderProps = {
   children: ReactNode
   authToken?: string
+  company: CompanyPortal
 }
 
-export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
+export function AppDataProvider({ children, authToken, company }: AppDataProviderProps) {
   const [state, setState] = useState<AppDataSnapshot>({
     employees: [],
     tasks: [],
@@ -137,14 +140,29 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    if (!company) {
+      setIsLoading(false)
+      return
+    }
+    
     const loadAll = async () => {
+      setIsLoading(true)
+      // Reset state when company changes to avoid showing stale data
+      setState({
+        employees: [],
+        tasks: [],
+        leads: [],
+        projects: [],
+        products: [],
+      })
       try {
+        const companyParam = `?company=${company}`
         const [employeesRes, tasksRes, leadsRes, projectsRes, productsRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/employees`),
-          fetch(`${API_BASE_URL}/tasks`),
-          fetch(`${API_BASE_URL}/leads`),
-          fetch(`${API_BASE_URL}/projects`),
-          fetch(`${API_BASE_URL}/products`),
+          fetch(`${API_BASE_URL}/employees${companyParam}`),
+          fetch(`${API_BASE_URL}/tasks${companyParam}`),
+          fetch(`${API_BASE_URL}/leads${companyParam}`),
+          fetch(`${API_BASE_URL}/projects${companyParam}`),
+          fetch(`${API_BASE_URL}/products${companyParam}`),
         ])
 
         const [employeesRaw, tasks, leadsRaw, projectsRaw, productsRaw] = await Promise.all([
@@ -160,28 +178,57 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
         const projects: (Project & { _id?: string })[] = projectsRaw
         const products: (Product & { _id?: string })[] = productsRaw
 
+        // Client-side filtering as safety net - ensure we only show data for current company
+        // This handles cases where backend might not filter properly
+        // Existing data without company field will be shown only for RNXA (backward compatibility)
+        const filterByCompany = <T extends Record<string, any>>(items: T[]): T[] => {
+          return items.filter((item) => {
+            const itemCompany = item.company?.toLowerCase()
+            // If no company field exists, assume it's RNXA data (for backward compatibility)
+            if (!itemCompany) {
+              return company === 'rnxa'
+            }
+            return itemCompany === company.toLowerCase()
+          })
+        }
+
+        console.log(`[AppDataContext] Loading data for company: ${company}`)
+
+        const mappedEmployees = employees.map((emp) => ({
+          ...emp,
+          id: (emp as any)._id ?? emp.id,
+          productIds: (emp as any).productIds ? (emp as any).productIds.map(String) : [],
+        }))
+
+        const mappedTasks = tasks.map((task: Task & { _id?: string }) => ({
+          ...task,
+          id: task._id ?? task.id,
+        }))
+
+        const mappedLeads = leads.map((lead) => ({
+          ...lead,
+          id: (lead as any)._id ?? lead.id,
+          temperature: (lead as any).temperature ?? 'Cold',
+          valuePeriod: (lead as any).valuePeriod ?? 'Monthly',
+          productIds: (lead as any).productIds ? (lead as any).productIds.map(String) : [],
+        }))
+
+        const mappedProjects = projects.map((project) => ({
+          ...project,
+          id: (project as any)._id ?? project.id,
+        }))
+
+        const mappedProducts = products.map((product) => ({
+          ...product,
+          id: (product as any)._id ?? product.id,
+        }))
+
         setState({
-          employees: employees.map((emp) => ({
-            ...emp,
-            id: (emp as any)._id ?? emp.id,
-            productIds: (emp as any).productIds ? (emp as any).productIds.map(String) : [],
-          })),
-          tasks,
-          leads: leads.map((lead) => ({
-            ...lead,
-            id: (lead as any)._id ?? lead.id,
-            temperature: (lead as any).temperature ?? 'Cold',
-            valuePeriod: (lead as any).valuePeriod ?? 'Monthly',
-            productIds: (lead as any).productIds ? (lead as any).productIds.map(String) : [],
-          })),
-          projects: projects.map((project) => ({
-            ...project,
-            id: (project as any)._id ?? project.id,
-          })),
-          products: products.map((product) => ({
-            ...product,
-            id: (product as any)._id ?? product.id,
-          })),
+          employees: filterByCompany(mappedEmployees),
+          tasks: filterByCompany(mappedTasks),
+          leads: filterByCompany(mappedLeads),
+          projects: filterByCompany(mappedProjects),
+          products: filterByCompany(mappedProducts),
         })
       } catch (error) {
         console.error('Failed to load data from API', error)
@@ -191,7 +238,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
     }
 
     loadAll()
-  }, [])
+  }, [company])
 
   const getAuthHeaders = (): HeadersInit => {
     return authToken ? { Authorization: `Bearer ${authToken}` } : {}
@@ -201,12 +248,15 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
     const res = await fetch(`${API_BASE_URL}/employees`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      body: JSON.stringify(input),
+      body: JSON.stringify({ ...input, company }),
     })
     const created: Employee & { _id?: string } = await res.json()
+    const createdId = (created as any)._id ?? created.id
+    // Ensure the created item has company field for client-side filtering
+    const createdWithCompany = { ...created, id: createdId, company: (created as any).company || company }
     setState((prev) => ({
       ...prev,
-      employees: [...prev.employees, { ...created, id: (created as any)._id ?? created.id }],
+      employees: [...prev.employees, createdWithCompany],
     }))
   }
 
@@ -251,7 +301,7 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
   }
 
   const approveAllPayroll: AppDataContextValue['approveAllPayroll'] = async () => {
-    const res = await fetch(`${API_BASE_URL}/employees/approve-all`, {
+    const res = await fetch(`${API_BASE_URL}/employees/approve-all?company=${company}`, {
       method: 'POST',
       headers: getAuthHeaders(),
     })
@@ -266,12 +316,15 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
     const res = await fetch(`${API_BASE_URL}/tasks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      body: JSON.stringify(input),
+      body: JSON.stringify({ ...input, company }),
     })
     const created: Task & { _id?: string } = await res.json()
+    const createdId = (created as any)._id ?? created.id
+    // Ensure the created item has company field for client-side filtering
+    const createdWithCompany = { ...created, id: createdId, company: (created as any).company || company }
     setState((prev) => ({
       ...prev,
-      tasks: [...prev.tasks, { ...created, id: (created as any)._id ?? created.id }],
+      tasks: [...prev.tasks, createdWithCompany],
     }))
   }
 
@@ -352,16 +405,18 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
     const res = await fetch(`${API_BASE_URL}/leads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      body: JSON.stringify(input),
+      body: JSON.stringify({ ...input, company }),
     })
     const created: Lead & { _id?: string } = await res.json()
+    const createdId = (created as any)._id ?? created.id
     setState((prev) => ({
       ...prev,
       leads: [
         ...prev.leads,
         {
           ...created,
-          id: (created as any)._id ?? created.id,
+          id: createdId,
+          company: (created as any).company || company,
           temperature: (created as any).temperature ?? 'Cold',
           valuePeriod: (created as any).valuePeriod ?? input.valuePeriod ?? 'Monthly',
           productIds: (created as any).productIds ? (created as any).productIds.map(String) : [],
@@ -427,12 +482,15 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
     const res = await fetch(`${API_BASE_URL}/projects`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      body: JSON.stringify(input),
+      body: JSON.stringify({ ...input, company }),
     })
     const created: Project & { _id?: string } = await res.json()
+    const createdId = (created as any)._id ?? created.id
+    // Ensure the created item has company field for client-side filtering
+    const createdWithCompany = { ...created, id: createdId, company: (created as any).company || company }
     setState((prev) => ({
       ...prev,
-      projects: [...prev.projects, { ...created, id: (created as any)._id ?? created.id }],
+      projects: [...prev.projects, createdWithCompany],
     }))
   }
 
@@ -467,12 +525,15 @@ export function AppDataProvider({ children, authToken }: AppDataProviderProps) {
     const res = await fetch(`${API_BASE_URL}/products`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      body: JSON.stringify(input),
+      body: JSON.stringify({ ...input, company }),
     })
     const created: Product & { _id?: string } = await res.json()
+    const createdId = (created as any)._id ?? created.id
+    // Ensure the created item has company field for client-side filtering
+    const createdWithCompany = { ...created, id: createdId, company: (created as any).company || company }
     setState((prev) => ({
       ...prev,
-      products: [...prev.products, { ...created, id: (created as any)._id ?? created.id }],
+      products: [...prev.products, createdWithCompany],
     }))
   }
 
