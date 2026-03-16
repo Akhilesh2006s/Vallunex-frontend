@@ -29,8 +29,8 @@ export function PortalSelector({ user, theme, onToggleTheme, onSelectPortal, onL
         </div>
       </div>
 
-      <div className="portal-grid">
-        {/* RNXA Portal */}
+      <div className="portal-grid single">
+        {/* RNXA Portal (only option) */}
         <button
           type="button"
           className="portal-card rnxa"
@@ -38,38 +38,13 @@ export function PortalSelector({ user, theme, onToggleTheme, onSelectPortal, onL
         >
           <div className="portal-card-icon">R</div>
           <h2>RNXA</h2>
-          <p>Technology & digital solutions company. Manage development teams, projects, products, and client engagements.</p>
+          <p>
+            Technology &amp; digital solutions company. Manage development teams, projects,
+            products, and client engagements.
+          </p>
           <div className="portal-card-stats">
             <div className="portal-card-stat">
               <span className="portal-card-stat-value">Tech</span>
-              <span className="portal-card-stat-label">Industry</span>
-            </div>
-            <div className="portal-card-stat">
-              <span className="portal-card-stat-value">Full</span>
-              <span className="portal-card-stat-label">Access</span>
-            </div>
-            <div className="portal-card-stat">
-              <span className="portal-card-stat-value">Active</span>
-              <span className="portal-card-stat-label">Status</span>
-            </div>
-          </div>
-          <div className="portal-card-arrow">
-            <ArrowRight style={{ width: 18, height: 18 }} />
-          </div>
-        </button>
-
-        {/* Amenityforge Portal */}
-        <button
-          type="button"
-          className="portal-card amenity"
-          onClick={() => onSelectPortal('amenityforge')}
-        >
-          <div className="portal-card-icon">A</div>
-          <h2>Amenityforge</h2>
-          <p>Amenity & services management company. Oversee operations, service delivery, and workforce planning.</p>
-          <div className="portal-card-stats">
-            <div className="portal-card-stat">
-              <span className="portal-card-stat-value">Services</span>
               <span className="portal-card-stat-label">Industry</span>
             </div>
             <div className="portal-card-stat">
